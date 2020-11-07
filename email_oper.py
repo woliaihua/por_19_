@@ -132,6 +132,21 @@ class GetWindowMsg():
         sleep(0.01)
         MouseToClick.twoKey('CTRL', 'V')  # 输入密码
         MouseToClick.oneKey('ENTER')
+    def login3(self,u,p):
+        sleep(0.2)
+        self.setText(u)
+        MouseToClick.click_img('./img/email_u.png')  # 点击邮件用户名
+        sleep(0.2)
+        MouseToClick.twoKey('CTRL', 'V')  # 输入账号
+        sleep(0.1)
+        self.setText(p)
+        sleep(0.1)
+        MouseToClick.oneKey('ENTER')
+        sleep(0.15)
+        MouseToClick.twoKey('CTRL', 'V')  # 输入密码
+        sleep(0.2)
+        MouseToClick.oneKey('ENTER')
+        #MouseToClick.click_img('./img/email_p.png')  # 点击邮件密码
     def login_out(self):
         GetWindowMsg('MainWindow', '网易邮箱大师')
         sleep(0.3)
@@ -195,7 +210,7 @@ def get_url(u, p):
         re_start_exe(email_exe_path)
         sleep(2)
         G = GetWindowMsg('LoginWindow', '网易邮箱大师')
-        G.login2(u, p)  # 登录
+        G.login3(u, p)  # 登录
     sleep(1)
     # 获取url地址
     G = GetWindowMsg('MainWindow', '网易邮箱大师')  # 获取数据与退出句柄不一样了
@@ -209,3 +224,7 @@ if __name__ == '__main__':
     p = 'kejv0059'
     #打开网易邮箱登录框，登录
     get_url(u, p)
+    # re_start_exe(email_exe_path)
+    # sleep(2)
+    # G = GetWindowMsg('LoginWindow', '网易邮箱大师')
+

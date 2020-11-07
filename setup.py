@@ -52,10 +52,10 @@ class BaseStartChome():
         kill_all_chorme()
         sleep(3)
         # 关闭进程
-        self.cmd = r'"{chrome_path}" --remote-debugging-port={port} --user-data-dir="C:\selenum\AutomationProfile{port}" --window-size=1080,800 '.format(chrome_path=chrome_path,port=port)  # --headless
+        #self.cmd = r'"{chrome_path}" --remote-debugging-port={port} --user-data-dir="C:\selenum\AutomationProfile{port}" --window-size=1080,800 '.format(chrome_path=chrome_path,port=port)  # --headless
         #加代理ip，#标记要修改
-        # self.cmd = r'"{chrome_path}" --remote-debugging-port={port} --user-data-dir="C:\selenum\AutomationProfile{port}" --window-size=1080,800 --proxy-server=http://{ip}'.format(
-        #     chrome_path=chrome_path, port=port, ip=ip)  # --headless
+        self.cmd = r'"{chrome_path}" --remote-debugging-port={port} --user-data-dir="C:\selenum\AutomationProfile{port}" --window-size=1080,800 --proxy-server=http://{ip}'.format(
+            chrome_path=chrome_path, port=port, ip=ip)  # --headless
         os.popen(self.cmd)
         chrome_options = Options()
         chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:{port}".format(port=port))
@@ -68,7 +68,7 @@ class BaseStartChome():
         set_driver(self.driver)
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {"source": script})
         Config.implicit_wait_secs =10 #设置隐式等待时间15秒
-        self.ip_state = 1#self.chick_ip() #标记要修改
+        self.ip_state = self.chick_ip() #标记要修改
 
     def chick_ip(self):
         """
