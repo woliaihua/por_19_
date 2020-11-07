@@ -1,6 +1,6 @@
 import requests
 
-
+ 
 def servers_chick_ip(ip):
     proxies = {'http': 'http://{ip}'.format(ip=ip),
                'https': 'https://{ip}'.format(ip=ip)
