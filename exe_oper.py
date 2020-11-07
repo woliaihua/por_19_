@@ -2,7 +2,7 @@ import win32api
 import os
 from time import sleep
 """
-启动exe
+重新启动exe
 """
 
 def start_exe(exe_path):
