@@ -18,6 +18,7 @@ from base64_to_img import to_png
 from chick_proxy import servers_chick_ip
 from del_txt_line import del_line#用一行删除一行
 from url_2_png import get_src_img
+from email_oper import get_url
 
 setlocale(LC_NUMERIC, 'English_US')
 
@@ -368,14 +369,7 @@ def setup(B, line,port):
         if state_login:
             print('登录成功，开始获取邮箱信息')
             # 打开网易邮箱登录框，登录
-            G = GetWindowMsg('LoginWindow', '网易邮箱大师')
-            G.login(u, p)  # 登录
-            sleep(1)
-            # 获取url地址
-            G = GetWindowMsg('MainWindow', '网易邮箱大师')  # 获取数据与退出句柄不一样了
-            url = G.get_url()
-            # 退出网易邮箱登录
-            G.login_out()
+            url =get_url(u, p)
             B.driver.get(url)
             if B.chick_liucheng_bakeup():
                 B.liucheng1()
@@ -391,35 +385,35 @@ def setup(B, line,port):
 
 
 if __name__ == '__main__':
-    # # 文件对象是迭代器。要一次迭代文件N行，与线程数一致，一次迭代N行就执行多少个线程
-    # def grouper(iterable, n, fillvalue=None):
-    #     args = [iter(iterable)] * n
-    #     return zip_longest(*args, fillvalue=fillvalue)
-    # # 分批读取账号
-    # with open('账号.txt', 'r') as f:
-    #     txt_lines = f.readlines()
-    # ip_num = 1 #几次账号就换一次ip
-    # def setup_chick_ip(port, txt_lines):
-    #     ip = get_ip()
-    #     B = BaseStartChome(port, ip)
-    #     ip_state = B.ip_state
-    #     if not ip_state:  # ip不可用
-    #         print(ip, '不可用，切换ip')
-    #         setup_chick_ip(port, txt_lines)
-    #     else:
-    #         for lines in grouper(txt_lines, int(ip_num), ''):
-    #             for line in lines:  # 一次读取N个账号
-    #                 setup(B, line, port)
-    #             print('切换ip')
-    #             ip = get_ip()  # N个账号换一次ip
-    #             B = BaseStartChome(port, ip)
-    #         B.driver.quit()
-    #
-    #
-    # port = 9022
-    # setup_chick_ip(9022, txt_lines)
-    B = BaseStartChome(9022, 'ip')
-    with open('邮箱.txt', 'r') as f:
-        for line in f.readlines():
-            setup(B,line,'port')
-            #print(1+'1')
+    # 文件对象是迭代器。要一次迭代文件N行，与线程数一致，一次迭代N行就执行多少个线程
+    def grouper(iterable, n, fillvalue=None):
+        args = [iter(iterable)] * n
+        return zip_longest(*args, fillvalue=fillvalue)
+    # 分批读取账号
+    with open('账号.txt', 'r') as f:
+        txt_lines = f.readlines()
+    ip_num = 1 #几次账号就换一次ip
+    def setup_chick_ip(port, txt_lines):
+        ip = get_ip()
+        B = BaseStartChome(port, ip)
+        ip_state = B.ip_state
+        if not ip_state:  # ip不可用
+            print(ip, '不可用，切换ip')
+            setup_chick_ip(port, txt_lines)
+        else:
+            for lines in grouper(txt_lines, int(ip_num), ''):
+                for line in lines:  # 一次读取N个账号
+                    setup(B, line, port)
+                print('切换ip')
+                ip = get_ip()  # N个账号换一次ip
+                B = BaseStartChome(port, ip)
+            B.driver.quit()
+
+
+    port = 9022
+    setup_chick_ip(9022, txt_lines)
+    # B = BaseStartChome(9022, 'ip')
+    # with open('邮箱.txt', 'r') as f:
+    #     for line in f.readlines():
+    #         setup(B,line,'port')
+    #         #print(1+'1')

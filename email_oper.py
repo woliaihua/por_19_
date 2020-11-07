@@ -9,8 +9,26 @@ from  time import sleep
 from mouseToClick import MouseToClick
 from img_2_text import png_2_text
 import os
-# pip install -i https://pypi.douban.com/simple pillow
-# import win32api
+from exe_oper import re_start_exe
+import chardet
+import configparser
+
+def get_file_code(filename):
+    f3 = open(filename, 'rb')
+    data = f3.read()
+    encode = chardet.detect(data).get('encoding')
+    f3.close()
+    return encode
+
+#path1 = os.path.dirname(os.path.abspath(__file__))  # 获取当前目录
+path2 ='config.ini'
+encode = get_file_code(path2)
+config = configparser.RawConfigParser()
+config.read(path2, encoding=encode)
+chrome_path = config.get('userinfo', "chrome_path")  # 0-12 如果是0 就表示不指定月份
+yanzhengqi_path = config.get('userinfo', "yanzhengqi_path")  # 0-12 如果是0 就表示不指定月份
+email_exe_path = config.get('userinfo', "email_exe_path")  # 0-12 如果是0 就表示不指定月份
+
 def get_window_pos(name):
     name = name
     handle = win32gui.FindWindow(0, name)
@@ -98,7 +116,22 @@ class GetWindowMsg():
         sleep(0.01)
         MouseToClick.twoKey('CTRL', 'V')  # 输入密码
         MouseToClick.oneKey('ENTER')
-
+    def login2(self,u,p):
+        G = GetWindowMsg('LoginWindow', '网易邮箱大师')
+        G.send_usernmae()  # 光标点击输入框
+        G.setText(u)
+        MouseToClick.oneKey('ENTER')
+        sleep(0.1)
+        # 模拟键盘组合键Ctrl+v将剪贴板的内容复制到搜索输入框中
+        MouseToClick.twoKey('CTRL', 'V')  # 输入账号
+        sleep(0.1)
+        # 回车，光标移动到密码
+        MouseToClick.oneKey('ENTER')
+        sleep(0.1)
+        G.setText(p)
+        sleep(0.01)
+        MouseToClick.twoKey('CTRL', 'V')  # 输入密码
+        MouseToClick.oneKey('ENTER')
     def login_out(self):
         GetWindowMsg('MainWindow', '网易邮箱大师')
         sleep(0.3)
@@ -111,6 +144,7 @@ class GetWindowMsg():
         except:
             sleep(1)
             MouseToClick.click_img('./img/email_setting.png')  # 点击邮箱设置
+            sleep(1.5)
             MouseToClick.click_img('./img/del_email_button.png')  # 点击删除此邮箱
         MouseToClick.click_img('./img/bubaoliu.png')#点击不包含
 
@@ -151,15 +185,27 @@ class GetWindowMsg():
             text = png_2_text(filename)
             url = 'https://www.amazon.co.uk/a/c/r?k=' + text.split('k=')[1].strip()
             return url
+
+def get_url(u, p):
+    try:
+        # 打开网易邮箱登录框，登录
+        G = GetWindowMsg('LoginWindow', '网易邮箱大师')
+        G.login(u, p)  # 登录
+    except:
+        re_start_exe(email_exe_path)
+        sleep(2)
+        G = GetWindowMsg('LoginWindow', '网易邮箱大师')
+        G.login2(u, p)  # 登录
+    sleep(1)
+    # 获取url地址
+    G = GetWindowMsg('MainWindow', '网易邮箱大师')  # 获取数据与退出句柄不一样了
+    url = G.get_url()
+    # 退出网易邮箱登录
+    G.login_out()
+    return url
+
 if __name__ == '__main__':
     u = 'yeshan87057pa@163.com'
     p = 'kejv0059'
     #打开网易邮箱登录框，登录
-    G = GetWindowMsg('LoginWindow', '网易邮箱大师')
-    G.login(u,p) #登录
-    sleep(1)
-    #获取url地址
-    G = GetWindowMsg('MainWindow', '网易邮箱大师')#获取数据与退出句柄不一样了
-    print(G.get_url())
-    #退出登录
-    G.login_out()
+    get_url(u, p)

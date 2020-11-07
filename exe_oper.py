@@ -4,6 +4,7 @@ from time import sleep
 """
 启动exe
 """
+
 def start_exe(exe_path):
     """
     启动exe

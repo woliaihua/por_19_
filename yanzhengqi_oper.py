@@ -1,12 +1,28 @@
 from win32gui  import *
 import win32con
-from mouseToClick import MouseToClick
-
-import win32gui_struct
-import win32api
 import win32gui
-import win32clipboard as w
 from  time import sleep
+import chardet
+import configparser
+from exe_oper import re_start_exe
+
+def get_file_code(filename):
+    f3 = open(filename, 'rb')
+    data = f3.read()
+    encode = chardet.detect(data).get('encoding')
+    f3.close()
+    return encode
+
+#path1 = os.path.dirname(os.path.abspath(__file__))  # 获取当前目录
+path2 ='config.ini'
+encode = get_file_code(path2)
+config = configparser.RawConfigParser()
+config.read(path2, encoding=encode)
+yanzhengqi_path = config.get('userinfo', "yanzhengqi_path")  # 0-12 如果是0 就表示不指定月份
+
+
+
+
  # 生成 buffer 对象
 class GetWindowMsg():
     def __init__(self,clasename,window_name):
@@ -77,8 +93,13 @@ class GetWindowMsg():
         return text
 
 def get_make_code(input_cod):
-    #打开认证器
-    G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
+    try:
+        #打开认证器
+        G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
+    except:
+        re_start_exe(yanzhengqi_path)
+        sleep(2)
+        G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
     clear_hd = G.find_subHandle(G.handle, [('Button', 0)])  # clear的句柄
     sleep(0.3)
     #点击清空
