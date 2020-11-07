@@ -390,7 +390,7 @@ if __name__ == '__main__':
         args = [iter(iterable)] * n
         return zip_longest(*args, fillvalue=fillvalue)
     # 分批读取账号
-    with open('账号.txt', 'r') as f:
+    with open('邮箱.txt', 'r') as f:
         txt_lines = f.readlines()
     ip_num = 1 #几次账号就换一次ip
     def setup_chick_ip(port, txt_lines):
