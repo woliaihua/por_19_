@@ -5,6 +5,10 @@ from  time import sleep
 import chardet
 import configparser
 from exe_oper import re_start_exe
+from re import findall
+from PIL import  ImageGrab
+from img_2_text import png_2_text
+
 
 def get_file_code(filename):
     f3 = open(filename, 'rb')
@@ -21,7 +25,34 @@ config.read(path2, encoding=encode)
 yanzhengqi_path = config.get('userinfo', "yanzhengqi_path")  # 0-12 如果是0 就表示不指定月份
 
 
-
+def get_window_pos(name):
+    name = name
+    handle = win32gui.FindWindow(0, name)
+    # 发送还原最小化窗口的信息
+    win32gui.SendMessage(handle, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
+    sleep(0.35)
+    # 获取窗口句柄
+    if handle == 0:
+        return None
+    else:
+        # 返回坐标值和handle
+        return win32gui.GetWindowRect(handle), handle
+def fetch_yanzhengqi_image():
+    (x1, y1, x2, y2), handle = get_window_pos("日亚-谷歌认证器v1.0")
+    # 发送还原最小化窗口的信息
+    win32gui.SendMessage(handle, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
+    SetForegroundWindow(handle)  # 设置窗口前台
+    ShowWindow(handle, 1)  # 显示窗口
+    # 设为高亮
+    win32gui.SetForegroundWindow(handle)
+    # 截图
+    grab_image = ImageGrab.grab((x1, y1, x2, y2))
+    #image = Image.open('./screenshot.png')   #打开图片
+    box = (9,74,60,93)#设置要裁剪的区域,可以使用画图工具识别坐标
+    region =  grab_image.crop(box)#此时，region是 一个新的对象
+    #region.show()#显示的话就会被占用，所以要注释
+    region.save("123.png")
+    return "123.png"
 
  # 生成 buffer 对象
 class GetWindowMsg():
@@ -89,7 +120,7 @@ class GetWindowMsg():
         address, length = PyGetBufferAddressAndLen(buf)
         text = PyGetString(address, length)
 
-        print('获取到的编码: ', text)
+        print('获取到的编码:', text)
         return text.strip()
 
 def get_make_code(input_cod):
@@ -102,7 +133,7 @@ def get_make_code(input_cod):
         try:
             G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
         except:
-            sleep(3)
+            sleep(2)
             G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
     clear_hd = G.find_subHandle(G.handle, [('Button', 0)])  # clear的句柄
     sleep(0.3)
@@ -119,15 +150,19 @@ def get_make_code(input_cod):
     sleep(0.5)
     G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
     edit_hd = G.find_subHandle(G.handle, [('Edit', 0)])  # 下面这个输入框的句柄
-    print(edit_hd)
     sleep(0.3)
     #获取生成的code
-    text = G.get_edit_txt(edit_hd)
-    aa = '111{}111'.format(text)
-    if aa == '111111':
-        print('123123123123123')
-        return get_make_code(input_cod)
+    text = G.get_edit_txt(edit_hd).strip()
+    r = findall('[0-9]', text)
+    if not r:
+        print('开始验证器文字提取')
+        # 获取小图
+        filename = fetch_yanzhengqi_image()
+        # 提取文字
+        text = png_2_text(filename)
+        return text
     else:
         return text.strip()
 if __name__ == '__main__':
     print(get_make_code('5egdfgdgdfg123123fsdfsdfsdfsd fsdfsd fsdf sdf sdf d'))
+    #fetch_yanzhengqi_image()

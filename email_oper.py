@@ -74,6 +74,7 @@ class GetWindowMsg():
         """
         # 发送还原最小化窗口的信息
         win32gui.SendMessage(self.handle, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
+        win32api.keybd_event(13, 0, 0, 0)  #
         SetForegroundWindow(self.handle)  # 设置窗口前台
         ShowWindow(self.handle, 1)  # 显示窗口
 
@@ -201,21 +202,26 @@ class GetWindowMsg():
             url = 'https://www.amazon.co.uk/a/c/r?k=' + text.split('k=')[1].strip()
             return url
 
+
 def get_url(u, p):
     try:
         # 打开网易邮箱登录框，登录
         G = GetWindowMsg('LoginWindow', '网易邮箱大师')
-        G.login(u, p)  # 登录
+        sleep(3)
+        G.login3(u, p)  # 登录
     except:
         re_start_exe(email_exe_path)
-        sleep(2)
+        sleep(3)
         G = GetWindowMsg('LoginWindow', '网易邮箱大师')
         G.login3(u, p)  # 登录
     sleep(1)
     # 获取url地址
     G = GetWindowMsg('MainWindow', '网易邮箱大师')  # 获取数据与退出句柄不一样了
     url = G.get_url()
+
+
     # 退出网易邮箱登录
+
     G.login_out()
     return url
 
@@ -223,7 +229,10 @@ if __name__ == '__main__':
     u = 'yeshan87057pa@163.com'
     p = 'kejv0059'
     #打开网易邮箱登录框，登录
-    get_url(u, p)
+    G = GetWindowMsg('LoginWindow', '网易邮箱大师')
+    sleep(4)
+    G.login3(u, p)  # 登录
+    #get_url(u, p)
     # re_start_exe(email_exe_path)
     # sleep(2)
     # G = GetWindowMsg('LoginWindow', '网易邮箱大师')

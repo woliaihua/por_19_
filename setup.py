@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from locale import atof,setlocale,LC_NUMERIC
 from email_oper import *
-from get_template import get_temp_dict
+from get_template import get_temp_dict,get_filename
 from send_request import SendRequest
 from selenium.webdriver.support.ui import Select
 from yanzhengqi_oper import get_make_code
@@ -34,7 +34,7 @@ config.read(path2, encoding=encode)
 chrome_path = config.get('userinfo', "chrome_path")  # 0-12 如果是0 就表示不指定月份
 yanzhengqi_path = config.get('userinfo', "yanzhengqi_path")  # 0-12 如果是0 就表示不指定月份
 email_exe_path = config.get('userinfo', "email_exe_path")  # 0-12 如果是0 就表示不指定月份
-temp_dict  = get_temp_dict() #模板
+
 
 
 def get_login_code(driver):
@@ -67,6 +67,8 @@ class BaseStartChome():
     """
 
     def __init__(self,port,ip):
+        self.temp_filename = get_filename('.txt', 'template')
+        self.temp_dict = get_temp_dict(self.temp_filename)  # 模板
         self.ip = ip
         #kill_pid(port)
         kill_all_chorme()
@@ -201,18 +203,18 @@ class BaseStartChome():
         """
         click(S('//*[@id="a-autoid-0"]/span/input'))#点击批准
         wait_until(S('//input[@name="pincode"]').exists, timeout_secs=20, interval_secs=0.4)  ## 是否有邮编输入框
-        write(temp_dict.get('邮编'),into=S('//input[@name="pincode"]'))
-        write(temp_dict.get('街道地址'),into=S('//input[@name="address_line1"]'))
-        write(temp_dict.get('城市'), into=S('//input[@name="city"]'))
-        write(temp_dict.get('省'), into=S('//input[@name="state"]'))
+        write(self.temp_dict.get('邮编'),into=S('//input[@name="pincode"]'))
+        write(self.temp_dict.get('街道地址'),into=S('//input[@name="address_line1"]'))
+        write(self.temp_dict.get('城市'), into=S('//input[@name="city"]'))
+        write(self.temp_dict.get('省'), into=S('//input[@name="state"]'))
         #获取电话号码
         self.SR = SendRequest()
         self.phone = self.SR.get_phone()
         print('获取到的手机号是{}'.format(self.phone))
         write('+86 {}'.format(self.phone), into=S('//*[@name="phoneno"]'))
-        write(temp_dict.get('英文名'),into=S('//input[@name="firstName"]'))
-        write(temp_dict.get('英文姓'),into=S('//input[@name="lastName"]'))
-        write(temp_dict.get('统一社会信用代码'), into=S('//input[@name="businessLicenseNumber"]'))
+        write(self.temp_dict.get('英文名'),into=S('//input[@name="firstName"]'))
+        write(self.temp_dict.get('英文姓'),into=S('//input[@name="lastName"]'))
+        write(self.temp_dict.get('统一社会信用代码'), into=S('//input[@name="businessLicenseNumber"]'))
         click(S('//*[@name="Submit"]'))  # 点击保存并继续
 
 
@@ -249,13 +251,13 @@ class BaseStartChome():
                 '07')#有效期 日
             sleep(0.3)
         send_data()
-        write(temp_dict.get('身份证'), into=S('//*[@name="docNumber"]'))
-        write(temp_dict.get('中文姓'), into=S('//*[@name="chineseLastName"]'))
-        write(temp_dict.get('中文名'), into=S('//*[@name="chineseFirstName"]'))
+        write(self.temp_dict.get('身份证'), into=S('//*[@name="docNumber"]'))
+        write(self.temp_dict.get('中文姓'), into=S('//*[@name="chineseLastName"]'))
+        write(self.temp_dict.get('中文名'), into=S('//*[@name="chineseFirstName"]'))
         try:
-            click(RadioButton(temp_dict.get('省')))
+            click(RadioButton(self.temp_dict.get('省')))
         except:
-            click(RadioButton(temp_dict.get('城市')))
+            click(RadioButton(self.temp_dict.get('城市')))
         write('+86 {}'.format(self.phone), into=S('//*[@id="country-phone-input"]'))
         click(S('//*[@name="sendVerificationButton" and not(@disabled)]//span[contains(text(),"Text me now")]'))  # 点击提交
         def get_phone_code(self):
@@ -287,12 +289,12 @@ class BaseStartChome():
     def liucheng3(self):
         print('开始第三步流程')
         wait_until(S('//*[@name="addCreditCardNumber"]').exists, timeout_secs=100, interval_secs=0.5)  # 需要安全验证
-        write(temp_dict.get('银行卡号'), into=S('//*[@name="addCreditCardNumber"]'))
+        write(self.temp_dict.get('银行卡号'), into=S('//*[@name="addCreditCardNumber"]'))
         Select(S('//*[@name="ccExpirationMonth" and not(@disabled)]').web_element).select_by_visible_text(
-            temp_dict.get('到期日'))  # 有效期 日
+            self.temp_dict.get('到期日'))  # 有效期 日
         Select(S('//*[@name="ccExpirationYear" and not(@disabled)]').web_element).select_by_visible_text(
-            temp_dict.get('到期年'))  # 有效期 日
-        write(temp_dict.get('英文姓') + temp_dict.get('英文名'), into=S('//*[@name="ccHolderName"]'))
+            self.temp_dict.get('到期年'))  # 有效期 日
+        write(self.temp_dict.get('英文姓') + self.temp_dict.get('英文名'), into=S('//*[@name="ccHolderName"]'))
         #write('854639', into=S('//*[@name="otpInput"]'))  # 输入验证码
         click('Save')
         wait_until(S('//*[@name="Submit"]').exists, timeout_secs=60, interval_secs=0.5)
@@ -302,7 +304,7 @@ class BaseStartChome():
         print('开始第四步流程')
         wait_until(Link('listing your products').exists, timeout_secs=120, interval_secs=0.5)  # 需要安全验证
         click(Link('listing your products'))
-        name = temp_dict.get('商品英文名')
+        name = self.temp_dict.get('商品英文名')
         try:
             write(name, into=S('//*[@name="displayNameField"]'))
         except:
@@ -340,7 +342,11 @@ class BaseStartChome():
         sleep(0.2)
         tet = S('//*[@id="sia-auth-app-formatted-secret"]').web_element.text #这个是生成玛
         print(tet)
-        code = get_make_code(tet)
+        try:
+            code = get_make_code(tet)
+        except:
+            sleep(0.3)
+            code = get_make_code(tet)
         write(code, S('//*[@id="ch-auth-app-code-input"]'))
         # APP转码这里留着下次做
         base64_str = S('//*[@id="container"]//img').web_element.get_attribute('src')
@@ -389,6 +395,7 @@ def setup(B, line):
                 B.liucheng2()
                 B.liucheng3()
                 B.liucheng4()
+                os.remove(B.temp_filename)#删除模板文件
             else:
                 print("出现We're sorry!页面，跳过账号！")
             B.quit()
