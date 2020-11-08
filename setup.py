@@ -1,10 +1,7 @@
 #coding=utf-8
 
 from helium import *
-from time import  sleep
-import configparser
 from itertools import zip_longest
-import chardet
 from kill_prot import *
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
@@ -40,6 +37,29 @@ email_exe_path = config.get('userinfo', "email_exe_path")  # 0-12 如果是0 就
 temp_dict  = get_temp_dict() #模板
 
 
+def get_login_code(driver):
+    """
+    获取登录验证码
+    :return:
+    """
+    while 1:
+        set_driver(driver)
+        print('识别中...')
+        scr = S('//*[@id="auth-captcha-image"]').web_element.get_attribute('src')
+        get_src_img(scr, './img/login_code8.png')
+        sleep(0.3)
+        code = png_2_text('./img/login_code8.png')
+        if code:
+            code = code.strip().replace(' ', '')
+        else:
+            code = ''
+        if len(code) == 6:
+            return code
+        else:
+            click(S('//*[@id="auth-captcha-refresh-link"]'))  # 点击换一张
+            wait_until(S('//*[@id="auth-captcha-refresh-link" and @style="display: inline;"]').exists,
+                       timeout_secs=20, interval_secs=0.4)  ## 等待图片加载成功
+            return get_login_code(driver)
 
 class BaseStartChome():
     """
@@ -100,21 +120,8 @@ class BaseStartChome():
             except:
                 pass
 
-    def get_login_code(self):
-        """
-        获取登录验证码
-        :return:
-        """
-        while 1:
-            scr = S('//*[@id="auth-captcha-image"]').web_element.get_attribute('src')
-            get_src_img(scr, './code/login_code8.png')
-            code = png_2_text('./code/login_code8.png')
-            code = code.strip().replace(' ', '')
-            if len(code) == 6:
-                return code
-            else:
-                click(S('//*[@id="auth-captcha-refresh-link"]'))  # 点击换一张
-                sleep(3)
+
+
     def chick_liucheng_bakeup(self):
         """
         流程准备工作检测，登录成功后可能提示We're sorry!
@@ -136,41 +143,40 @@ class BaseStartChome():
         write(p, into=S('//*[@id="ap_password"]'))
         click(S('//*[@id="signInSubmit"]'))
         try:
-            wait_until(S('//*[@id="auth-captcha-image"]').exists, timeout_secs=8, interval_secs=0.4)  # 需要安全验证
+            wait_until(Link("看不清, 换一张").exists, timeout_secs=8, interval_secs=0.4)  # 需要安全验证
             print('需要安全验证，开始安全验证')
-            sleep(3)
-            code = self.get_login_code()
-            print('验证码: ',code)
-            write(p, into=S('//*[@id="ap_password"]'))
-            write(code, into=S('//*[@id="auth-captcha-guess"]'))
-            click(S('//*[@id="signInSubmit"]'))
-            try:
-                wait_until(Text('验证码输入有误，请重新输入').exists, timeout_secs=5, interval_secs=0.4)  # 验证码有误
-                print('验证码输入有误，重新获取验证重试')
-                click(S('//*[@id="auth-captcha-refresh-link"]'))  # 点击换一张
-                code = self.get_login_code()
-                write(p, into=S('//*[@id="ap_password"]'))
-                write(code, into=S('//*[@id="auth-captcha-guess"]'))
-                click(S('//*[@id="signInSubmit"]'))
+            def chick_code(self):
                 try:
-                    wait_until(Text('验证码输入有误，请重新输入').exists, timeout_secs=5, interval_secs=0.4)  # 验证码有误
-                    print('验证码输入有误，重新获取验证重试')
-                    click(S('//*[@id="auth-captcha-refresh-link"]'))  # 点击换一张
-                    code = self.get_login_code()
+                    wait_until(Link("看不清, 换一张").exists, timeout_secs=8, interval_secs=0.4)  # 有验证码
+                    try:
+                        wait_until(Text('我们找不到具有该电子邮件地址的账户').exists, timeout_secs=1, interval_secs=0.4)
+                        print('找不到具有该电子邮件地址的账户')
+                        return False
+                    except:
+                        pass
+                    print('开始识别验证码')
+                    code = get_login_code(self.driver)
+                    print("验证码是：",code)
+                    print('开始输入验证码')
                     write(p, into=S('//*[@id="ap_password"]'))
                     write(code, into=S('//*[@id="auth-captcha-guess"]'))
                     click(S('//*[@id="signInSubmit"]'))
-                except:
+                    return chick_code(self)
+                except Exception as e:
+                    print(e)
                     return True
-            except:
-                try:
-                    wait_until(S('//*[@id="channelDetails"]').exists, timeout_secs=8, interval_secs=0.4)  ## 是否有批准按钮
-                    return True
-                except:
-                    return False
-        except:#不需要安全验证了
+            chick_state = chick_code(self)#验证码登录状态
+            if not chick_state:#找不到具有该电子邮件地址的账户的情况
+                return False
             try:
-                wait_until(S('//*[@id="channelDetails"]').exists, timeout_secs=6, interval_secs=0.4)  ## 是否有批准按钮
+                wait_until(S('//*[@id="channelDetails"]').exists, timeout_secs=10, interval_secs=0.4)  ## 是否有批准按钮
+                return True
+            except:
+                return False
+        except Exception as e:
+            print(e)
+            try:
+                wait_until(S('//*[@id="channelDetails"]').exists, timeout_secs=3, interval_secs=0.4)  ## 是否有批准按钮
                 return True
             except:
                 return False
@@ -294,10 +300,14 @@ class BaseStartChome():
 
     def liucheng4(self):
         print('开始第四步流程')
-        wait_until(Link('listing your products').exists, timeout_secs=100, interval_secs=0.5)  # 需要安全验证
+        wait_until(Link('listing your products').exists, timeout_secs=120, interval_secs=0.5)  # 需要安全验证
         click(Link('listing your products'))
         name = temp_dict.get('商品英文名')
-        write(name, into=S('//*[@name="displayNameField"]'))
+        try:
+            write(name, into=S('//*[@name="displayNameField"]'))
+        except:
+            self.driver.refresh()
+            write(name, into=S('//*[@name="displayNameField"]'))
         click(S('//*[@name="Submit"]'))  # 点击提交，但是提交后可能没货
         def chick():  # 检查是否有货
             for i in range(1, 1000):
@@ -308,9 +318,12 @@ class BaseStartChome():
                 except:  # 有货
                     return
         chick()
-        click('Start listing your products')
-        wait_until(Text('View Credit Card Info').exists, timeout_secs=100, interval_secs=0.5)
-        click(Button('View Credit Card Info'))  #查看信用卡信息
+        try:
+            click('Start listing your products')
+            wait_until(Text('View Credit Card Info').exists, timeout_secs=100, interval_secs=0.5)
+            click(Button('View Credit Card Info'))  #查看信用卡信息
+        except:
+            pass
         click(Button('Enable Two-Step Verification')) #启动两步验证
         #这里要输入密码
         try:
@@ -355,7 +368,7 @@ def get_ip():
             del_line(ip, 'ip.txt')
             sleep(0.05)
 
-def setup(B, line,port):
+def setup(B, line):
     try:
         u = line.split('----')[0].strip('\n')
         p = line.split('----')[1].strip('\n')
@@ -385,35 +398,31 @@ def setup(B, line,port):
 
 
 if __name__ == '__main__':
-    # 文件对象是迭代器。要一次迭代文件N行，与线程数一致，一次迭代N行就执行多少个线程
+    #文件对象是迭代器。要一次迭代文件N行，与线程数一致，一次迭代N行就执行多少个线程
     def grouper(iterable, n, fillvalue=None):
         args = [iter(iterable)] * n
         return zip_longest(*args, fillvalue=fillvalue)
     # 分批读取账号
     with open('邮箱.txt', 'r') as f:
         txt_lines = f.readlines()
-    ip_num = 1 #几次账号就换一次ip
-    def setup_chick_ip(port, txt_lines):
+    def setup_chick_ip(port):
         ip = get_ip()
         B = BaseStartChome(port, ip)
         ip_state = B.ip_state
         if not ip_state:  # ip不可用
             print(ip, '不可用，切换ip')
-            setup_chick_ip(port, txt_lines)
-        else:
-            for lines in grouper(txt_lines, int(ip_num), ''):
-                for line in lines:  # 一次读取N个账号
-                    setup(B, line, port)
-                print('切换ip')
-                ip = get_ip()  # N个账号换一次ip
-                B = BaseStartChome(port, ip)
-            B.driver.quit()
+            setup_chick_ip(port)
+        return B
+    ip_num = 1  # 几次账号就换一次ip
+    for lines in grouper(txt_lines, int(ip_num), ''):
+        B = setup_chick_ip(9022)
+        for line in lines:  # 一次读取N个账号
+            setup(B, line)
+        print('切换ip')
+        B.driver.quit()
 
-
-    port = 9022
-    setup_chick_ip(9022, txt_lines)
-    # B = BaseStartChome(9022, 'ip')
     # with open('邮箱.txt', 'r') as f:
     #     for line in f.readlines():
+    #         B = BaseStartChome(9022, 'ip')
     #         setup(B,line,'port')
-    #         #print(1+'1')
+            #print(1+'1')

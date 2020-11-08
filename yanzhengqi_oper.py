@@ -90,7 +90,7 @@ class GetWindowMsg():
         text = PyGetString(address, length)
 
         print('获取到的编码: ', text)
-        return text
+        return text.strip()
 
 def get_make_code(input_cod):
     try:
@@ -99,7 +99,11 @@ def get_make_code(input_cod):
     except:
         re_start_exe(yanzhengqi_path)
         sleep(2)
-        G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
+        try:
+            G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
+        except:
+            sleep(3)
+            G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
     clear_hd = G.find_subHandle(G.handle, [('Button', 0)])  # clear的句柄
     sleep(0.3)
     #点击清空
@@ -112,16 +116,18 @@ def get_make_code(input_cod):
     #点击生成编码
     make_hd = G.find_subHandle(G.handle, [('Button', 1)])  # make的句柄
     PostMessage(make_hd, win32con.BM_CLICK, 0, 0)  # 点击
-    sleep(0.1)
+    sleep(0.5)
+    G = GetWindowMsg('WTWindow', '日亚-谷歌认证器v1.0')
     edit_hd = G.find_subHandle(G.handle, [('Edit', 0)])  # 下面这个输入框的句柄
+    print(edit_hd)
+    sleep(0.3)
     #获取生成的code
     text = G.get_edit_txt(edit_hd)
-    if text:
-        return text.strip()
+    aa = '111{}111'.format(text)
+    if aa == '111111':
+        print('123123123123123')
+        return get_make_code(input_cod)
     else:
-        sleep(0.5)
-        text = G.get_edit_txt(edit_hd)
         return text.strip()
 if __name__ == '__main__':
     print(get_make_code('5egdfgdgdfg123123fsdfsdfsdfsd fsdfsd fsdf sdf sdf d'))
-    print(11111111111111)
