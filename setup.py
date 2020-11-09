@@ -402,6 +402,7 @@ def setup(B, line):
 
 
 if __name__ == '__main__':
+    import sys
     #文件对象是迭代器。要一次迭代文件N行，与线程数一致，一次迭代N行就执行多少个线程
     def grouper(iterable, n, fillvalue=None):
         args = [iter(iterable)] * n
@@ -411,12 +412,16 @@ if __name__ == '__main__':
         txt_lines = f.readlines()
     def setup_chick_ip(port):
         ip = get_ip()
-        B = BaseStartChome(port, ip)
-        ip_state = B.ip_state
-        if not ip_state:  # ip不可用
-            print(ip, '不可用，切换ip')
-            setup_chick_ip(port)
-        return B
+        if ip:
+            B = BaseStartChome(port, ip)
+            ip_state = B.ip_state
+            if not ip_state:  # ip不可用
+                print(ip, '不可用，切换ip')
+                setup_chick_ip(port)
+            return B
+        else:
+            print('没有ip了，退出程序！')
+            sys.exit()
     ip_num = 1  # 几次账号就换一次ip
     for lines in grouper(txt_lines, int(ip_num), ''):
         B = setup_chick_ip(9022)

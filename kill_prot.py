@@ -28,7 +28,6 @@ def kill_pid(prot):
             pass
 
 def kill_all_chorme():
-    os.popen('taskkill /im chromedriver85.exe /F')
     os.popen('taskkill /im chrome.exe /F')
     os.popen('taskkill /im chromedriver.exe /F')
 if __name__ == '__main__':

@@ -190,9 +190,21 @@ class GetWindowMsg():
         #提取文字
         text = png_2_text(filename)
         if text:
-            url = 'https://www.amazon.co.uk/a/c/r?k='+text.split('k=')[1].strip()
-            os.remove(filename)
-            return url
+            try:
+                url = 'https://www.amazon.co.uk/a/c/r?k='+text.split('k=')[1].strip()
+                os.remove(filename)
+                return url
+            except:
+                print('第一次提取失败，尝试重新提取url，请勿挡住或者关闭邮件窗口，url需要肉眼可见')
+                GetWindowMsg('MainWindow', '网易邮箱大师')
+                sleep(0.5)
+                # 获取小图
+                filename = fetch_image()
+                # 提取文字
+                text = png_2_text(filename)
+                url = 'https://www.amazon.co.uk/a/c/r?k=' + text.split('k=')[1].strip()
+                os.remove(filename)
+                return url
         else:
             sleep(3)
             # 获取小图
