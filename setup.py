@@ -254,10 +254,7 @@ class BaseStartChome():
         write(self.temp_dict.get('身份证'), into=S('//*[@name="docNumber"]'))
         write(self.temp_dict.get('中文姓'), into=S('//*[@name="chineseLastName"]'))
         write(self.temp_dict.get('中文名'), into=S('//*[@name="chineseFirstName"]'))
-        try:
-            click(RadioButton(self.temp_dict.get('省')))
-        except:
-            click(RadioButton(self.temp_dict.get('城市')))
+        click(S('//*[@id="ExistingAddress"]/div[1]/div/div/div/div/label/input'))
         write('+86 {}'.format(self.phone), into=S('//*[@id="country-phone-input"]'))
         click(S('//*[@name="sendVerificationButton" and not(@disabled)]//span[contains(text(),"Text me now")]'))  # 点击提交
         def get_phone_code(self):

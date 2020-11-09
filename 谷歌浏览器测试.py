@@ -31,9 +31,9 @@ import datetime
 """
 滑动图片验证
 """
-from get_template import get_temp_dict
-
-temp_dict  = get_temp_dict() #模板
+from get_template import get_temp_dict,get_filename
+temp_filename = get_filename('.txt', 'template')
+temp_dict = get_temp_dict(temp_filename)  # 模板
 def get_file_code(filename):
     f3 = open(filename, 'rb')
     data = f3.read()
@@ -57,7 +57,7 @@ port =9022
 #接管浏览器
 chrome_options = Options()
 chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:{port}".format(port=port))
-driver = webdriver.Chrome(executable_path="./chromedriver.exe", chrome_options=chrome_options)
+driver = webdriver.Chrome(executable_path="./chromedriver.exe", options =chrome_options)
 script = '''
 Object.defineProperty(navigator, 'webdriver', {
     get: () => undefined
@@ -70,8 +70,8 @@ driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {"source": scrip
 # write('+86 18040377309',into=S('//*[@id="country-phone-input"]'))
 # click(S('//*[@id="go"]'))
 print(driver.title)
-# click(S('//*[@id="sia-otp-accordion-totp-header"]/i'))
-wait_until(Text('我们找不到具有该电子邮件地址的账户').exists, timeout_secs=1, interval_secs=0.4)  # 需要安全验证
+click(S('//*[@id="ExistingAddress"]/div[1]/div/div/div/div/label/input'))
+#wait_until(Text('我们找不到具有该电子邮件地址的账户').exists, timeout_secs=1, interval_secs=0.4)  # 需要安全验证
 #write('kejv0059',into=S('//*[@id="ap_password"]'))
 #wait_until(S('//*[@id="auth-captcha-refresh-link" and @style="display: inline;"]').exists, timeout_secs=10, interval_secs=0.4)  ## 是否没货
 print(datetime.datetime.now())
@@ -87,76 +87,20 @@ print(datetime.datetime.now())
 
 #click(S('//*[@id="cancelOTPLink"]/span'))  # 点击提交，但是提交后可能没货
 # txt = S('//*[@id="container"]//img').web_element.get_attribute('src')
-def save_txt( txt):
-    def get_file_code():
-        f3 = open('结果.txt', 'rb')
-        data = f3.read()
-        encode = chardet.detect(data).get('encoding')
-        f3.close()
-        return encode
-
-    with open('结果.txt', 'a', encoding=get_file_code()) as f:
-        f.write(txt + '\n')
-
-
-def liucheng3(self):
-    print('开始第三步流程')
-    wait_until(S('//*[@name="addCreditCardNumber"]').exists, timeout_secs=100, interval_secs=0.5)  # 需要安全验证
-    write(temp_dict.get('银行卡号'), into=S('//*[@name="addCreditCardNumber"]'))
-    Select(S('//*[@name="ccExpirationMonth" and not(@disabled)]').web_element).select_by_visible_text(
-        temp_dict.get('到期日'))  # 有效期 日
-    Select(S('//*[@name="ccExpirationYear" and not(@disabled)]').web_element).select_by_visible_text(
-        temp_dict.get('到期年'))  # 有效期 日
-    write(temp_dict.get('英文姓') + temp_dict.get('英文名'), into=S('//*[@name="ccHolderName"]'))
-    # write('854639', into=S('//*[@name="otpInput"]'))  # 输入验证码
-    click('Save')
-    wait_until(S('//*[@name="Submit"]').exists, timeout_secs=60, interval_secs=0.5)
-    click(S('//*[@name="Submit"]'))  # 保存并继续
-
-
-def liucheng4():
-    print('开始第四步流程')
-    click(Link('listing your products'))
-    name = temp_dict.get('商品英文名')
-    write(name, into=S('//*[@name="displayNameField"]'))
-    click(S('//*[@name="Submit"]'))  # 点击提交，但是提交后可能没货
-
-    def chick():  # 检查是否有货
-        for i in range(1, 1000):
-            try:
-                wait_until(Text('Not available').exists, timeout_secs=4, interval_secs=0.4)  ## 没保存表示没货
-                write(name + str(i), into=S('//*[@name="displayNameField"]'))
-                click(S('//*[@name="Submit"]'))  # 点击提交，但是提交后可能没货
-            except:  # 有货
-                return
-
-    chick()
-    click('Start listing your products')
-    wait_until(Text('View Credit Card Info').exists, timeout_secs=100, interval_secs=0.5)
-    click(Button('View Credit Card Info'))  # 查看信用卡信息
-    click(Button('Enable Two-Step Verification'))  # 启动两步验证
-    # 这里要输入密码
-    click(S('//*[@id="sia-otp-accordion-totp-header"]/i'))  # 点击充应用器注册
-    sleep(1.5)
-    click(Link("Can't scan the barcode?"))
-    sleep(0.2)
-    tet = S('//*[@id="sia-auth-app-formatted-secret"]').web_element.text  # 这个是生成玛
-    print(tet)
-    code = get_make_code(tet)
-    write(code, S('//*[@id="ch-auth-app-code-input"]'))
-    # APP转码这里留着下次做
-    base64_str = S('//*[@id="container"]//img').web_element.get_attribute('src')
-    to_png(base64_str, './img2/{}.png'.format(name))  # 保存图片
-    # 存储
-    save_txt(name)
-    save_txt('123123123213')
-    save_txt(tet)
-    save_txt('*' * 70)
-    click(S('//*[@id="ch-auth-app-submit"]'))  # 点击验证
-    if not CheckBox("Don't require OTP on this browser").is_checked():  # 勾选请勿记住密码
-        click(CheckBox("Don't require OTP on this browser"))
-    click(S('//*[@id="enable-mfa-form-submit"]'))  # 提交
-
+wait_until(S('//input[@name="pincode"]').exists, timeout_secs=20, interval_secs=0.4)  ## 是否有邮编输入框
+write(temp_dict.get('邮编'),into=S('//input[@name="pincode"]'))
+write(temp_dict.get('街道地址'),into=S('//input[@name="address_line1"]'))
+write(temp_dict.get('城市'), into=S('//input[@name="city"]'))
+write(temp_dict.get('省'), into=S('//input[@name="state"]'))
+#获取电话号码
+SR = SendRequest()
+phone = SR.get_phone()
+print('获取到的手机号是{}'.format(phone))
+write('+86 {}'.format(phone), into=S('//*[@name="phoneno"]'))
+write(temp_dict.get('英文名'),into=S('//input[@name="firstName"]'))
+write(temp_dict.get('英文姓'),into=S('//input[@name="lastName"]'))
+write(temp_dict.get('统一社会信用代码'), into=S('//input[@name="businessLicenseNumber"]'))
+# click(S('//*[@name="Submit"]'))  # 点击保存并继续
 
 #liucheng4()
 #wait_until(Text('验证码输入有误，请重新输入').exists, timeout_secs=2, interval_secs=0.4)  # 需要安全验证
